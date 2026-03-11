@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # Local IRC server (InspIRCd)
+  ircd:
+    image: inspircd/inspircd:latest
+    container_name: nullclaw-irc-server
+    restart: unless-stopped
+    ports:
+      - "6667:6667"
+      - "6697:6697"
+    volumes:
+      - ./data/ircd:/inspircd/conf
+      - ./data/ircd/data:/inspircd/data
+    environment:
+      - INSP_NETWORK_NAME=MeshRelay
+      - INSP_SERVER_NAME=irc.meshrelay.local
+      - INSP_ADMIN_NAME=Admin
+      - INSP_ADMIN_EMAIL=admin@meshrelay.local
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "6667"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NullClaw IRC bot
+  bot:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    container_name: nullclaw-irc-bot
+    restart: unless-stopped
+    volumes:
+      - ./config.irc.local.json:/root/.nullclaw/config.json:ro
+      - ./data/bot:/root/.nullclaw
+    depends_on:
+      ircd:
+        condition: service_healthy
+    environment:
+      - NULLCLAW_CHANNELS=irc
+      - NULLCLAW_IRC_HOST=ircd
+      - NULLCLAW_IRC_PORT=6667
+      - NULLCLAW_IRC_NICK=nullclaw-bot
+      - NULLCLAW_IRC_NICKSERV_PASSWORD=nickserv_password_here
+
+networks:
+  default:
+    name: nullclaw-irc-network

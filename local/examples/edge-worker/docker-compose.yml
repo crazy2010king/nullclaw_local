@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  edge-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nullclaw-edge-worker
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - WORKER_MAX_CONCURRENCY=100
+      - KV_TTL_DEFAULT=86400
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8787/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "0.5"
+
+  # Optional Redis cache for high performance scenarios
+  redis:
+    image: redis:7-alpine
+    container_name: nullclaw-edge-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --save 60 1 --loglevel warning
+    profiles:
+      - with-redis
+
+networks:
+  default:
+    name: nullclaw-edge-network

@@ -1,0 +1,40 @@
+{
+  "version": "2026.3.1",
+  "agents": {
+    "coordinator": {
+      "name": "Coordinator Agent",
+      "description": "Multi-agent coordination specialist",
+      "provider": "anthropic",
+      "model": "claude-3-opus-20240229",
+      "max_tool_iterations": 100,
+      "system_prompt": "You are the coordinator agent. You delegate tasks to the worker agent and aggregate results. Use the matrix channel to communicate with the worker. Always respond in Chinese.",
+      "tools": ["memory", "websearch", "bash", "python"]
+    },
+    "worker": {
+      "name": "Worker Agent",
+      "description": "Specialized task execution agent",
+      "provider": "anthropic",
+      "model": "claude-3-sonnet-20240229",
+      "max_tool_iterations": 50,
+      "system_prompt": "You are the worker agent. You receive tasks from the coordinator agent and execute them using available tools. Report results back to the coordinator. Always respond in Chinese.",
+      "tools": ["memory", "calculator", "file_read", "file_write"]
+    }
+  },
+  "channels": {
+    "matrix": {
+      "enabled": true,
+      "homeserver": "http://localhost:8008",
+      "room_id": "!general:matrix.local",
+      "allow_from": ["@coordinator:matrix.local", "@worker:matrix.local"]
+    }
+  },
+  "memory": {
+    "engine": "sqlite",
+    "path": "~/.nullclaw/memory.db",
+    "max_entries": 10000
+  },
+  "security": {
+    "sandbox": "none",
+    "allow_remote_code_execution": true
+  }
+}

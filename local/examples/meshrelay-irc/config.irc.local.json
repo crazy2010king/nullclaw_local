@@ -1,0 +1,41 @@
+{
+  "version": "2026.3.1",
+  "agents": {
+    "irc-bot": {
+      "name": "MeshRelay IRC Bot",
+      "description": "Decentralized mesh network relay bot",
+      "provider": "anthropic",
+      "model": "claude-3-sonnet-20240229",
+      "max_tool_iterations": 50,
+      "system_prompt": "你是MeshRelay IRC网络的中继机器人。你负责在IRC网络中转发消息、回答用户问题、执行网络诊断命令。保持回答简洁，使用纯文本，不要使用Markdown格式。",
+      "tools": ["memory", "bash", "ping", "traceroute", "network_scan"]
+    }
+  },
+  "channels": {
+    "irc": {
+      "enabled": true,
+      "host": "irc.meshrelay.local",
+      "port": 6697,
+      "nick": "nullclaw-bot",
+      "username": "nullclaw",
+      "realname": "NullClaw AI Assistant",
+      "channels": ["#general", "#tech", "#support"],
+      "allow_from": ["*"],
+      "tls": true,
+      "nickserv_password": "nickserv_password_here",
+      "server_password": null,
+      "sasl_password": null
+    }
+  },
+  "memory": {
+    "engine": "sqlite",
+    "path": "~/.nullclaw/memory.db",
+    "persist_messages": true,
+    "max_message_age_days": 30
+  },
+  "security": {
+    "sandbox": "firejail",
+    "allow_network_access": true,
+    "allowed_commands": ["ping", "traceroute", "mtr", "dig"]
+  }
+}

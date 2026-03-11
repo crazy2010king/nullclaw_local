@@ -1,0 +1,81 @@
+version: "3.8"
+
+services:
+  # Local Matrix homeserver (Synapse)
+  synapse:
+    image: matrixdotorg/synapse:latest
+    container_name: nullclaw-matrix-synapse
+    restart: unless-stopped
+    ports:
+      - "8008:8008"
+    volumes:
+      - ./data/synapse:/data
+    environment:
+      - SYNAPSE_SERVER_NAME=matrix.local
+      - SYNAPSE_REPORT_STATS=no
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Postgres for Matrix (optional, but better performance)
+  synapse-db:
+    image: postgres:14-alpine
+    container_name: nullclaw-matrix-db
+    restart: unless-stopped
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=synapse
+      - POSTGRES_PASSWORD=synapse_password
+      - POSTGRES_DB=synapse
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U synapse"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Agent 1: Primary coordinator agent
+  agent-coordinator:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    container_name: nullclaw-matrix-agent-coordinator
+    restart: unless-stopped
+    volumes:
+      - ./config.matrix.local.json:/root/.nullclaw/config.json:ro
+      - ./data/agent-coordinator:/root/.nullclaw
+    depends_on:
+      synapse:
+        condition: service_healthy
+    environment:
+      - NULLCLAW_AGENT_NAME=coordinator
+      - NULLCLAW_CHANNELS=matrix
+      - NULLCLAW_MATRIX_HOMESERVER=http://synapse:8008
+      - NULLCLAW_MATRIX_ACCESS_TOKEN=${COORDINATOR_ACCESS_TOKEN}
+      - NULLCLAW_MATRIX_ROOM_ID=!general:matrix.local
+
+  # Agent 2: Specialist worker agent
+  agent-worker:
+    build:
+      context: ../../../
+      dockerfile: Dockerfile
+    container_name: nullclaw-matrix-agent-worker
+    restart: unless-stopped
+    volumes:
+      - ./config.matrix.local.json:/root/.nullclaw/config.json:ro
+      - ./data/agent-worker:/root/.nullclaw
+    depends_on:
+      synapse:
+        condition: service_healthy
+    environment:
+      - NULLCLAW_AGENT_NAME=worker
+      - NULLCLAW_CHANNELS=matrix
+      - NULLCLAW_MATRIX_HOMESERVER=http://synapse:8008
+      - NULLCLAW_MATRIX_ACCESS_TOKEN=${WORKER_ACCESS_TOKEN}
+      - NULLCLAW_MATRIX_ROOM_ID=!general:matrix.local
+
+networks:
+  default:
+    name: nullclaw-matrix-network

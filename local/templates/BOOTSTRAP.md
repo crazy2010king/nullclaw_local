@@ -1,0 +1,1 @@
+../../src/workspace_templates/BOOTSTRAP.md

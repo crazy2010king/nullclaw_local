@@ -1,0 +1,21 @@
+{
+  "name": "nullclaw-edge-worker",
+  "version": "2026.3.1",
+  "description": "NullClaw edge worker runtime (Node.js + WASM)",
+  "main": "local-worker.js",
+  "scripts": {
+    "start": "node local-worker.js",
+    "dev": "nodemon local-worker.js",
+    "test": "node --test test/"
+  },
+  "dependencies": {
+    "fastify": "^4.26.0",
+    "better-sqlite3": "^9.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
